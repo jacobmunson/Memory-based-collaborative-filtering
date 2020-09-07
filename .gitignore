@@ -92,3 +92,4 @@ Datas/ml-1m/
 Datas/ml-10M100K/
 Datas/ml-20m/
 *.data
+Datas/ml-10M/ratings.dat
