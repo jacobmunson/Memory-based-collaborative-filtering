@@ -14,16 +14,22 @@ class IBCollaborativeFilter(object):
         self.RMSE = dict()
         self.MAE = dict()
 
-    ### 平均加权策略，预测userId对itemId的评分
+
     def getRating(self, Train_data_matrix, itemId, simility_matrix, knumber=20):
-        neighborset = get_K_Neighbors(Train_data_matrix, simility_matrix, knumber)  # 最相似的K个Item
-        simSums = numpy.sum(simility_matrix[neighborset])  # simSums为0，即该项目尚未被其他用户评分，这里的处理方法：返回用户平均分
-        averageOfUser = self.ItemMeanMatrix[itemId]  # 获取userId 的平均值
-        jiaquanAverage = (Train_data_matrix[neighborset] - self.ItemMeanMatrix[neighborset]).dot(simility_matrix[neighborset])  # 计算每个用户的加权，预测
+        neighborset = get_K_Neighbors(Train_data_matrix, simility_matrix, knumber) # get the neighbor set
+        simSums = numpy.sum(simility_matrix[neighborset])  
+        # print(simSums) Sum of similarities for weighted average
+        averageOfUser = self.ItemMeanMatrix[itemId]  # userId
+        jiaquanAverage = (Train_data_matrix[neighborset] - self.ItemMeanMatrix[neighborset]).dot(simility_matrix[neighborset])
+        # prediction function: p_ui = [ neighbor values - mean(of those neighbors - by neighbors) ] * sim(neighbors)
+
+        #jiaquanAverage = numpy.mean(Train_data_matrix[neighborset]) # mean of neighbor values
+       # print(jiaquanAverage)
+        # 
         if simSums == 0:
-            return averageOfUser
+            return averageOfUser # if sum of similarities is 0, then return average of the users
         else:
-            return averageOfUser + jiaquanAverage / simSums
+            return averageOfUser + jiaquanAverage / simSums # jiaquanAverage #
 
     def doEvaluate(self, testDataMatrix, K):
         a, b = testDataMatrix.nonzero()
@@ -34,6 +40,6 @@ class IBCollaborativeFilter(object):
             # print(len(self.predictions))
         self.RMSE[K] = RMSE(self.truerating, self.predictions)
         self.MAE[K] = MAE(self.truerating, self.predictions)
-        print("IBCF  K=%d,RMSE:%f,MAE:%f" % (K, self.RMSE[K], self.MAE[K]))
+        print("IBCF  K = %d, RMSE: %f, MAE: %f" % (K, self.RMSE[K], self.MAE[K]))
 
 
