@@ -76,10 +76,10 @@ def LoadMovieLensData(FileType='ml-100k'):
         data = pd.read_table('Datas/ml-100k/u.data', header=None, names=header)
     elif FileType == 'ml-1M':
         header = ['user_id', 'item_id', 'rating', 'timestamp']
-        data = pd.read_table('Datas/ml-1M/ratings.dat', header=None, names=header)
+        data = pd.read_table('Datas/ml-1M/ratings.dat', sep="::", header=None, names=header)
     elif FileType == 'ml-10M':
         header = ['user_id', 'item_id', 'rating', 'timestamp']
-        data = pd.read_table('Datas/ml-10M100K/ratings.dat', sep="::", header=None, names=header, engine='python')
+        data = pd.read_table('Datas/ml-10M/ratings.dat', sep="::", header=None, names=header, engine='python')
     elif FileType == 'ml-20M':
         data = pd.read_csv('Datas/ml-20m/ratings.csv')
     else:
@@ -92,7 +92,6 @@ def SpiltData(DataSet, SpiltRate=0.25):
     return TrainData, TestData
 
 
-# 给定用户实例编号，和相似度矩阵，得到最相似的K个用户,对用户共同评价过的物品中找到最相似的K个对象
 def get_K_Neighbors(Train_data_matrix, simility_matrix, knumber=10):
     SIM = simility_matrix.copy()
     zeroset = np.where(Train_data_matrix == 0)
@@ -114,9 +113,20 @@ def Savetxt(FilePath, message='', mode='a'):
 
 
 def DataFrame2Matrix(n_users, n_items, dataframe):
+    
+    #import h5py
+    #hdf5_store = h5py.File("./cache.hdf5", "a")
+    #hdf5_store_trans = h5py.File("./cache.hdf5", "b")
+    #train_data_matrix = hdf5_store.create_dataset("train_data_matrix", (n_users, n_items), compression="gzip")
+    #train_data_matrix = hdf5_store.require_dataset("train_data_matrix", (n_users, n_items), compression="gzip", dtype= np.float32,  fillvalue = 0)
+    
+    #train_data_matrix_transpose = hdf5_store_trans.require_dataset("train_data_matrix_transpose", (n_items, n_users), compression="gzip", dtype= np.float32,  fillvalue = 0)
+    
     train_data_matrix = np.zeros((n_users, n_items))
+
     for line in dataframe.itertuples():
         train_data_matrix[line[1] - 1, line[2] - 1] = line[3]
+        #train_data_matrix_transpose[line[2] - 1, line[1] - 1] = line[3]
     return train_data_matrix
 
 
