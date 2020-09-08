@@ -20,6 +20,10 @@ class UBCollaborativeFilter(object):
         averageOfUser = self.UserMeanMatrix[userId]  #
         jiaquanAverage = (Train_data_matrix[neighborset] - self.UserMeanMatrix[neighborset]).dot(simility_matrix[neighborset]) 
         #jiaquanAverage = numpy.mean(Train_data_matrix[neighborset])
+        
+        #print(np.std(Train_data_matrix[neighborset]))
+        # Train_data_matrix[neighborset] # neighbor values - use these for CI, JK CI, BS CI
+               
         if simSums == 0:
             return averageOfUser
         else:
