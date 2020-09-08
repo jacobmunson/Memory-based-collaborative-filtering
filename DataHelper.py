@@ -123,7 +123,8 @@ def DataFrame2Matrix(n_users, n_items, dataframe):
     #train_data_matrix_transpose = hdf5_store_trans.require_dataset("train_data_matrix_transpose", (n_items, n_users), compression="gzip", dtype= np.float32,  fillvalue = 0)
     
     train_data_matrix = np.zeros((n_users, n_items))
-
+    #from scipy import sparse
+    #train_data_matrix = sparse.coo_matrix(n_user,n_items)
     for line in dataframe.itertuples():
         train_data_matrix[line[1] - 1, line[2] - 1] = line[3]
         #train_data_matrix_transpose[line[2] - 1, line[1] - 1] = line[3]
