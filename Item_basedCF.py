@@ -79,6 +79,6 @@ class IBCollaborativeFilter(object):
             # print(len(self.predictions))
         self.RMSE[K] = RMSE(self.truerating, self.predictions)
         self.MAE[K] = MAE(self.truerating, self.predictions)
-        print("IBCF  K = %d, RMSE: %f, MAE: %f" % (K, self.RMSE[K], self.MAE[K]))
+        print("IBCF Results:  K = %d, RMSE: %f, MAE: %f" % (K, self.RMSE[K], self.MAE[K]))
 
 
