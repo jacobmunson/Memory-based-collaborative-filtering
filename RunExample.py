@@ -22,6 +22,7 @@ MovieLensData = {
 use_cosine = True 
 use_pearson = False
 dataset = "ml-1M"
+predictor_type = "use_unweighted" # "use_intercept_weighted" # "use_unweighted" # "use_weighted"
 
 def parseargs(): 
     parser = argparse.ArgumentParser()
@@ -65,9 +66,13 @@ if __name__ == '__main__':
     MyUBCF.train_data_matrix = train_data_matrix
     MyIBCF.train_data_matrix = train_data_matrix
     MyUBCF.test_data_matrix = test_data_matrix
-
     MyIBCF.test_data_matrix = test_data_matrix
-    
+    if predictor_type == "use_unweighted":
+        print("Using unweighted averaging...")
+    elif predictor_type == "use_weighted":
+        print("Using weighted averaging")
+    elif predictor_type == "use_intercept_weighted":
+        print("Using intercept weighted predictor")
     
     if use_cosine:
         print("Using cosine similarity...")
@@ -90,7 +95,7 @@ if __name__ == '__main__':
     MyIBCF.ItemMeanMatrix = numpy.true_divide(MyUBCF.train_data_matrix.sum(0), (MyUBCF.train_data_matrix != 0).sum(0))  
     
     MyIBCF.ItemMeanMatrix[np.isnan(MyIBCF.ItemMeanMatrix)] = 0
-    KList = [5, 10, 15, 25, 50, 75, 100, 125] #  
+    KList = [5, 10, 15, 25, 50, 75, 100, 125] # 
     df_total_ibcf = pd.DataFrame()
     df_total_ubcf = pd.DataFrame()
     
@@ -110,18 +115,24 @@ if __name__ == '__main__':
         MyUBCF.CI_upper = []
         MyUBCF.CI_lower = []
         
+        MyIBCF.CI_knn_upper = []
+        MyIBCF.CI_knn_lower = []
+        MyUBCF.CI_knn_upper = []
+        MyUBCF.CI_knn_lower = []
+        
+        
         MyIBCF.num_nhbr_actual = []
         MyIBCF.sd_terms = []
         MyUBCF.num_nhbr_actual = []
         MyUBCF.sd_terms = []
 
         print("Starting UBCF...")
-        t1 = Thread(target=MyUBCF.doEvaluate, args=(test_data_matrix, KList[i]))
+        t1 = Thread(target=MyUBCF.doEvaluate, args=(test_data_matrix, KList[i], predictor_type))
         t1.start()
         t1.join()
         
         print("Starting IBCF...")
-        t2 = Thread(target=MyIBCF.doEvaluate, args=(test_data_matrix, KList[i]))
+        t2 = Thread(target=MyIBCF.doEvaluate, args=(test_data_matrix, KList[i], predictor_type))
         t2.start()
         t2.join()
         
@@ -142,10 +153,16 @@ if __name__ == '__main__':
         #print(math.sqrt(sum(np.array(difference) ** 2)/len(difference)))
         
         #print("Attaching bounds...")
-        df_ibcf["upper"] = MyIBCF.CI_upper
-        df_ibcf["lower"] = MyIBCF.CI_lower
-        df_ubcf["upper"] = MyUBCF.CI_upper
-        df_ubcf["lower"] = MyUBCF.CI_lower        
+        df_ibcf["ci_upper"] = MyIBCF.CI_upper
+        df_ibcf["ci_lower"] = MyIBCF.CI_lower
+        df_ubcf["ci_upper"] = MyUBCF.CI_upper
+        df_ubcf["ci_lower"] = MyUBCF.CI_lower 
+        
+        df_ibcf["ci_knn_upper"] = MyIBCF.CI_knn_upper
+        df_ibcf["ci_knn_lower"] = MyIBCF.CI_knn_lower
+        df_ubcf["ci_knn_upper"] = MyUBCF.CI_knn_upper
+        df_ubcf["ci_knn_lower"] = MyUBCF.CI_knn_lower 
+        
    
         #print("IBCF neighbors")
         df_ibcf["num_nbhr"] = MyIBCF.num_nhbr_actual
@@ -198,4 +215,6 @@ if __name__ == '__main__':
     plt.grid()
     plt.savefig('Docs/%s/IBCF %s %1.1f.png' % (myparser.ratings, myparser.ratings, myparser.testsize))
     plt.show()
-    # df_total.to_csv("results_ml100k.csv")
+
+
+df_total.to_csv("results_ml100k.csv")
