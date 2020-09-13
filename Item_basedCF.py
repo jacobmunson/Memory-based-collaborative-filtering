@@ -5,7 +5,7 @@ from EvaluationHelper import *
 import math
 from confidence import standard_ci
 from confidence import knn_ci
-
+from confidence import jackknife_ci
 
 class IBCollaborativeFilter(object):
     def __init__(self):
@@ -21,19 +21,18 @@ class IBCollaborativeFilter(object):
         self.CI_lower = []
         self.CI_knn_upper = []
         self.CI_knn_lower = []
+        self.CI_jk_upper = []
+        self.CI_jk_lower = []
         
         self.num_nhbr_actual = []
         self.sd_terms = []
 
-                
-        
-
-
     def getRating(self, Train_data_matrix, itemId, simility_matrix, knumber = 20, pred_function = "use_intercept_weighted"):
         neighborset = get_K_Neighbors(Train_data_matrix, simility_matrix, knumber) # get the neighbor set
-        simSums = numpy.sum(simility_matrix[neighborset])  
+        simSums = numpy.sum(abs(simility_matrix[neighborset])) # I think this should be abs of sims
         # print(simSums) Sum of similarities for weighted average
         averageOfUser = self.ItemMeanMatrix[itemId]  # userId
+        self.num_nhbr_actual.append(len(neighborset))
         
         if pred_function == "use_weighted":
             # statement
@@ -44,9 +43,8 @@ class IBCollaborativeFilter(object):
                 pred = pred / simSums
             else:
                 pred = averageOfUser   
-
-                
-            self.num_nhbr_actual.append(len(neighborset))
+              
+            
             if len(neighborset) > 1:
                 self.sd_terms.append(np.std(Train_data_matrix[neighborset]))
             else:
@@ -56,8 +54,13 @@ class IBCollaborativeFilter(object):
             if(len(neighborset) >= 2):
                 ci_me = standard_ci(Train_data_matrix[neighborset])
             # for KNN CI
-            if(len(neighborset > 2)):
+            if(len(neighborset) > 2):
                 ci_knn_me = knn_ci(Train_data_matrix[neighborset]) # need to put in all the conditions below but for knn CI
+            # for Jackknife CI
+            if(len(neighborset) >= 2):
+                ci_jk_me = jackknife_ci(ratings = Train_data_matrix[neighborset], 
+                                        sim = simility_matrix[neighborset], 
+                                        use_unweighted = False, use_weighted = True)
 
             # for CI
             if len(neighborset) >= 2:
@@ -75,7 +78,19 @@ class IBCollaborativeFilter(object):
             elif len(neighborset) <= 2:
                 self.CI_knn_lower.append(math.nan)
                 self.CI_knn_upper.append(math.nan)
+                
+                
+            # for Jackknife CI - need to input Train_data_matrix[neighborset] * simility_matrix[neighborset] :i.e. weighted values
+            if len(neighborset) >= 2: # not sure about this
+                self.CI_jk_lower.append(pred - ci_jk_me)
+                self.CI_jk_upper.append(pred + ci_jk_me)
+            elif len(neighborset) < 2:
+                self.CI_jk_lower.append(math.nan)
+                self.CI_jk_upper.append(math.nan)                                
+                
+                
             return pred
+        
         elif pred_function == "use_unweighted":
             # just average the neighborset
             
@@ -84,8 +99,7 @@ class IBCollaborativeFilter(object):
             else:
                 pred = averageOfUser
                 
-                
-            self.num_nhbr_actual.append(len(neighborset))
+
             if len(neighborset) > 1:
                 self.sd_terms.append(np.std(Train_data_matrix[neighborset]))
             else:
@@ -95,8 +109,16 @@ class IBCollaborativeFilter(object):
             if(len(neighborset) >= 2):
                 ci_me = standard_ci(Train_data_matrix[neighborset])
             # for KNN CI
-            if(len(neighborset > 2)):
+            if(len(neighborset) > 2):
                 ci_knn_me = knn_ci(Train_data_matrix[neighborset]) # need to put in all the conditions below but for knn CI
+            # for Jackknife CI
+            if(len(neighborset) >= 2):
+                #print("IBCF")
+                #print(Train_data_matrix[neighborset])
+                #print(simility_matrix[neighborset])
+                ci_jk_me = jackknife_ci(ratings = Train_data_matrix[neighborset], 
+                                        sim = simility_matrix[neighborset], 
+                                        use_unweighted = True, use_weighted = False)
 
             # for CI
             if len(neighborset) >= 2:
@@ -105,7 +127,6 @@ class IBCollaborativeFilter(object):
             elif len(neighborset) < 2:
                 self.CI_lower.append(math.nan)
                 self.CI_upper.append(math.nan)
-
             
             # for KNN CI
             if len(neighborset) > 2:
@@ -114,10 +135,16 @@ class IBCollaborativeFilter(object):
             elif len(neighborset) <= 2:
                 self.CI_knn_lower.append(math.nan)
                 self.CI_knn_upper.append(math.nan)
-
-            return pred
                 
-            #print("here")
+            # for Jackknife CI - need to input Train_data_matrix[neighborset] * simility_matrix[neighborset] :i.e. weighted values
+            if len(neighborset) >= 2: # not sure about this
+                self.CI_jk_lower.append(pred - ci_jk_me)
+                self.CI_jk_upper.append(pred + ci_jk_me)
+            elif len(neighborset) < 2:
+                self.CI_jk_lower.append(math.nan)
+                self.CI_jk_upper.append(math.nan)   
+                
+
             return pred
         
         elif pred_function == "use_intercept_weighted":
@@ -126,9 +153,7 @@ class IBCollaborativeFilter(object):
             # prediction function: p_ui = [ neighbor values - mean(of those neighbors - by neighbors) ] * sim(neighbors)
     
             #jiaquanAverage = numpy.mean(Train_data_matrix[neighborset]) # mean of neighbor values
-            
-            self.num_nhbr_actual.append(len(neighborset)) # Train_data_matrix[neighborset]
-            
+
             if len(neighborset) > 1:
                 self.sd_terms.append(np.std(Train_data_matrix[neighborset]))
             else:
@@ -141,8 +166,13 @@ class IBCollaborativeFilter(object):
             if(len(neighborset) >= 2):
                 ci_me = standard_ci(Train_data_matrix[neighborset])
             # for KNN CI
-            if(len(neighborset > 2)):
+            if(len(neighborset) > 2):
                 ci_knn_me = knn_ci(Train_data_matrix[neighborset]) # need to put in all the conditions below but for knn CI
+            # for Jackknife CI
+            if(len(neighborset) >= 2):
+                ci_jk_me = jackknife_ci(ratings = Train_data_matrix[neighborset], 
+                                        sim = simility_matrix[neighborset], 
+                                        use_unweighted = False, use_weighted = True)
             
             # for CI
             if simSums == 0 and len(neighborset) >= 2:
@@ -175,6 +205,24 @@ class IBCollaborativeFilter(object):
             elif simSums != 0 and len(neighborset) <= 2:
                 self.CI_knn_lower.append(math.nan)
                 self.CI_knn_upper.append(math.nan)
+                
+            # for Jackknife CI - need to input Train_data_matrix[neighborset] * simility_matrix[neighborset] :i.e. weighted values
+            if simSums == 0 and len(neighborset) >= 2:
+                self.CI_jk_lower.append(pred - ci_jk_me)
+                self.CI_jk_upper.append(pred + ci_jk_me)
+                 # if sum of similarities is 0, then return average of the users
+            elif simSums != 0 and len(neighborset) >= 2:
+                pred = averageOfUser + jiaquanAverage / simSums
+                self.CI_jk_lower.append(pred - ci_jk_me)
+                self.CI_jk_upper.append(pred + ci_jk_me)
+            elif simSums == 0 and len(neighborset) < 2:
+                self.CI_jk_lower.append(math.nan)
+                self.CI_jk_upper.append(math.nan)   
+            elif simSums != 0 and len(neighborset) < 2:
+                self.CI_jk_lower.append(math.nan)
+                self.CI_jk_upper.append(math.nan)   
+
+                
             
             if simSums == 0:
                 return averageOfUser # if sum of similarities is 0, then return average of the users
