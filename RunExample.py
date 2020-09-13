@@ -21,8 +21,8 @@ MovieLensData = {
 
 use_cosine = True 
 use_pearson = False
-dataset = "ml-1M"
-predictor_type = "use_unweighted" # "use_intercept_weighted" # "use_unweighted" # "use_weighted"
+dataset = "ml-100k"
+predictor_type = "use_intercept_weighted" # "use_intercept_weighted" # "use_unweighted" # "use_weighted"
 
 def parseargs(): 
     parser = argparse.ArgumentParser()
@@ -80,7 +80,7 @@ if __name__ == '__main__':
         MyUBCF.SimilityMatrix = cosine_similarity(train_data_matrix)
         print("Computing IBCF similarity matrix...")
         MyIBCF.SimilityMatrix = cosine_similarity(train_data_matrix.T)
-    elif use_pearson:
+    elif use_pearson: #### NEEDS TO BE FIXED AND TESTED
         print("Using pearson similarity...")
         print("Computing UBCF similarity matrix...")
         print("NEED TO FIX")
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     MyIBCF.ItemMeanMatrix = numpy.true_divide(MyUBCF.train_data_matrix.sum(0), (MyUBCF.train_data_matrix != 0).sum(0))  
     
     MyIBCF.ItemMeanMatrix[np.isnan(MyIBCF.ItemMeanMatrix)] = 0
-    KList = [5, 10, 15, 25, 50, 75, 100, 125] # 
+    KList = [5, 10, 15, 25, 50, 75, 100, 125] # 5, 10, 15, 25, 50, 75, 100, 125
     df_total_ibcf = pd.DataFrame()
     df_total_ubcf = pd.DataFrame()
     
@@ -104,22 +104,28 @@ if __name__ == '__main__':
         df_ibcf = pd.DataFrame()
         df_ubcf = pd.DataFrame()
         
-        
         MyUBCF.truerating = []
         MyUBCF.predictions = []
         MyIBCF.truerating = []
         MyIBCF.predictions = []
         
+        # Standard CI
         MyIBCF.CI_upper = []
         MyIBCF.CI_lower = []
         MyUBCF.CI_upper = []
         MyUBCF.CI_lower = []
         
+        # KNN CI
         MyIBCF.CI_knn_upper = []
         MyIBCF.CI_knn_lower = []
         MyUBCF.CI_knn_upper = []
         MyUBCF.CI_knn_lower = []
         
+        # JK CI 
+        MyIBCF.CI_jk_upper = []
+        MyIBCF.CI_jk_lower = []
+        MyUBCF.CI_jk_upper = []
+        MyUBCF.CI_jk_lower = []
         
         MyIBCF.num_nhbr_actual = []
         MyIBCF.sd_terms = []
@@ -153,15 +159,24 @@ if __name__ == '__main__':
         #print(math.sqrt(sum(np.array(difference) ** 2)/len(difference)))
         
         #print("Attaching bounds...")
+        print("Attaching CI bounds...")
         df_ibcf["ci_upper"] = MyIBCF.CI_upper
         df_ibcf["ci_lower"] = MyIBCF.CI_lower
         df_ubcf["ci_upper"] = MyUBCF.CI_upper
         df_ubcf["ci_lower"] = MyUBCF.CI_lower 
-        
+
+        print("Attaching KNN CI bounds...")        
         df_ibcf["ci_knn_upper"] = MyIBCF.CI_knn_upper
         df_ibcf["ci_knn_lower"] = MyIBCF.CI_knn_lower
         df_ubcf["ci_knn_upper"] = MyUBCF.CI_knn_upper
         df_ubcf["ci_knn_lower"] = MyUBCF.CI_knn_lower 
+        
+        print("Attaching JK CI bounds...")
+        df_ibcf["ci_jk_upper"] = MyIBCF.CI_jk_upper
+        df_ibcf["ci_jk_lower"] = MyIBCF.CI_jk_lower
+        df_ubcf["ci_jk_upper"] = MyUBCF.CI_jk_upper
+        df_ubcf["ci_jk_lower"] = MyUBCF.CI_jk_lower 
+        
         
    
         #print("IBCF neighbors")
@@ -217,4 +232,4 @@ if __name__ == '__main__':
     plt.show()
 
 
-df_total.to_csv("results_ml100k.csv")
+df_total.to_csv("results_ml100k_intecept_weighted.csv")
