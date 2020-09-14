@@ -93,3 +93,8 @@ Datas/ml-10M100K/
 Datas/ml-20m/
 *.data
 Datas/ml-10M/ratings.dat
+results_ml1M_weighted.csv
+results_ml1M_intercept_weighted.csv
+results_ml100k_weighted.csv
+results_ml100k_unweighted.csv
+results_ml100k_intercept_weighted.csv
