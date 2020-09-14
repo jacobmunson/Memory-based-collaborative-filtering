@@ -21,8 +21,8 @@ MovieLensData = {
 
 use_cosine = True 
 use_pearson = False
-dataset = "ml-100k"
-predictor_type = "use_intercept_weighted" # "use_intercept_weighted" # "use_unweighted" # "use_weighted"
+dataset = "ml-1M"
+predictor_type = "use_unweighted" # "use_intercept_weighted" # "use_unweighted" # "use_weighted"
 
 def parseargs(): 
     parser = argparse.ArgumentParser()
@@ -232,4 +232,4 @@ if __name__ == '__main__':
     plt.show()
 
 
-df_total.to_csv("results_ml100k_intecept_weighted.csv")
+df_total.to_csv("results_ml1M_weighted.csv")
