@@ -35,10 +35,7 @@ def knn_ci(ratings): # input will be Train_data_matrix[neighborset]
 ## Jackknife Interval ##
 ########################
 def jackknife_ci(ratings, sim, use_unweighted, use_weighted):
-    
-    
-    #sum_sim = n.sum(abs(sim)) 
-    
+
     if use_weighted == True:
         mu_weighted_ratings = sum(ratings * sim) / sum(abs(sim))
     if use_unweighted == True:
@@ -46,8 +43,6 @@ def jackknife_ci(ratings, sim, use_unweighted, use_weighted):
 
     mu_jk_samples, n = [] , len(ratings)
     index = np.arange(n)
-  
-
     
     for i in range(n):
         if use_unweighted == True:
